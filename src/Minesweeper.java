@@ -42,16 +42,15 @@ public class Minesweeper {
     // Method to initialize the game board with empty values
   private void initializeBoard() {
       //  char gameboard [][] = new char[getRows()][getCols()]; //initialize the 10 x 10 gameboard through a 2d array
-        for(int i = 0; i < getRows(); i++) { //loops through the rows in the board
-            for(int j = 0; j < getCols(); j++) { //loops through the columns on the board
+        for(int i = 0; i < rows; i++) { //loops through the rows in the board
+            for(int j = 0; j < cols; j++) { //loops through the columns on the board
              board[i][j] = '*'; //
-             setBoard(board);
-                System.out.print(getBoard(i,j));
+            setBoard(board);
+                //System.out.print(getBoard(i,j));
             }
-            System.out.println();
+           // System.out.println();
         }
     }
-
 
 
 
@@ -140,36 +139,19 @@ public class Minesweeper {
     // Method to display the current state of the board
     public void displayBoard() {
         // TODO: Implement this method
-
-/*
-        //loop through all the cells on the board
-        for(int row = 0; row < rows; row++) {
-            for(int col = 0; col < cols; col++) {
-               if(revealed[row][col])  {
-                   System.out.println("M ");
-               }
-             else {
-                 System.out.println(board[row][col] + " ");
-             }
-            if(flagged[row][col]) {
-                 System.out.println("F");
-                }
-             else{
-                 System.out.println("*");
-                }
-            }
-            System.out.println();
-        }
- */
         // Loop through all the cells on the board
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                if (revealed[row][col]) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                //if the revealed cell is not a mine
+                if (revealed[i][j] && !mines[i][j]) {
                     // Display the number of adjacent mines or a space if none
-                    System.out.print(board[row][col] + " ");
-                } else {
-                    // Display "*" for unrevealed cells
-                    System.out.print("* ");
+                    System.out.print(board[i][j] + " ");
+                    revealed[i][j] = true;
+                    revealCell(rows,cols);
+                    }
+                //if the revealed cell is a mine, print all the mine cells
+                else if (revealed[i][j] && mines[i][j]) {
+                    System.out.print(board[i][j] + "X");
                 }
             }
             System.out.println(); // Move to the next line after printing each row
@@ -185,7 +167,6 @@ public class Minesweeper {
             if (!revealed[row][col]) {
                 //reveal the cell
                 revealCell(row, col);
-                displayBoard();
              //   if the selected cell to be revealed is a mine, then it is game over.
                 if (mines[row][col]) {
                     gameOver = true;
@@ -196,33 +177,36 @@ public class Minesweeper {
             //if a user wants to flag, then flag the selected cell.
         } else if (action.equals("flag")) {
             flagCell(row, col);
-            displayBoard();
             //if a user wants to unflag a cell, then unflag the selected cell.
         } else if (action.equals("unflag")) {
             unflagCell(row, col);
-            displayBoard();
         }
     }
 
 
     // Method to check if the player has won the game
-    public boolean checkWin() {
+    public boolean checkWin(int row, int col) {
         // TODO: Implement this method
-        for(int row = 0; row < rows; row++) {
-            for(int col = 0; col < cols; col++) {
-                if(revealed[row][col] && !mines[row][col]) {
-                    System.out.println("Congrats, you have won the game!!!");
-                    gameOver = true;
-                    return true;
-                }
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < cols; j++) {
+               if(!mines[i][j] && !revealed[i][j]) {
+                   return false;
+               }
             }
         }
-        return false;
+        System.out.println("Congratulations! You win!");
+        setGameOver(true);
+        return true;
     }
 
     // Method to check if the player has lost the game
     public boolean checkLoss(int row, int col) {
         // TODO: Implement this method
+        if (mines[row][col] && revealed[row][col]) {
+            System.out.println("You Lose! You hit a mine.");
+            setGameOver(true);
+            return true;
+        }
         return false;
     }
 
@@ -235,17 +219,35 @@ public class Minesweeper {
             return;
         }
 
-        //if the reveal selected cell is a mine, then
+        //if the reveal selected cell is a mine, then you lose
         if(mines[row][col]) {
-            System.out.println("You hit a mine. Game Over!");
-            gameOver = true;
+            checkLoss(row,col);
         }
 
         //setting revealed cells to true means that a cell is revealed successfully.
         //if selected cell to be revealed is not a mine, then
+
+        /*
         if(revealed[row][col] && !mines[row][col]) {
             revealed[row][col] = true;
-            displayBoard();
+            checkWin(row, col);
+        }
+        */
+
+        revealed[row][col] = true;
+        checkWin(row, col);
+
+
+        if (board[row][col] == '*') {
+            for (int i = row - 1; i <= row + 1; i++) {
+                for (int j = col - 1; j <= col + 1; j++) {
+                    // Ensure we don't go out of bounds or reveal the current cell
+                    if (i >= 0 && i < rows && j >= 0 && j < cols && !(i == row && j == col)) {
+                        revealCell(i, j);
+                       // checkWin(row,col);
+                    }
+                }
+            }
         }
     }
 
